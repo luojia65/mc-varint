@@ -1,6 +1,6 @@
 extern crate mc_varint;
 
-use mc_varint::{VarInt, VarIntRead, VarIntWrite};
+use mc_varint::{VarInt, VarIntRead, VarIntWrite, VarLong, VarLongRead, VarLongWrite};
 use std::io::{Cursor, ErrorKind};
 use std::collections::HashSet;
 
@@ -80,38 +80,42 @@ fn var_int_write_exact() {
     }
 }
 
+macro_rules! beat_match {
+    ($bm_func: ident, $var_type: ident, $conversation_type: ident,
+    $write_func: ident, $read_func: ident) => {
 #[test]
-fn beat_matching() {
-    let cond = bm_cond_generate();
-    for num in cond.iter() {
-        let mut cur = Cursor::new(Vec::new());
-        let var_int = VarInt::from(*num);
-        cur.write_var_int(var_int).unwrap();
-        let vec = cur.into_inner();
-
-        let num1 = i32::from(Cursor::new(vec).read_var_int().unwrap());
-        assert_eq!(*num, num1);
-    }
-}
-
-fn bm_cond_generate() -> HashSet<i32> {
-    let mut ans = HashSet::new();
+fn $bm_func() {
+    // Generate conditions
+    let mut cond = HashSet::new();
     let mut i = 1;
     loop {
-        ans.insert(i - 1);
-        ans.insert(i);
-        ans.insert(i + 1);
-        ans.insert(- i - 1);
-        ans.insert(- i);
-        ans.insert(- i + 1);
-        if i <= i32::max_value() / 2 {
+        cond.insert(i - 1);
+        cond.insert(i);
+        cond.insert(i + 1);
+        cond.insert(- i - 1);
+        cond.insert(- i);
+        cond.insert(- i + 1);
+        if i <= $conversation_type::max_value() / 2 {
             i *= 2;
         } else {
             break;
         }
     }
-    ans.insert(0);
-    ans.insert(i32::max_value());
-    ans.insert(i32::min_value());
-    ans
+    cond.insert(0);
+    cond.insert($conversation_type::max_value());
+    cond.insert($conversation_type::min_value());
+    // Begin iteration
+    for num in cond.iter() {
+        let mut cur = Cursor::new(Vec::new());
+        cur.$write_func($var_type::from(*num)).unwrap();
+        let vec = cur.into_inner();
+
+        let num1 = $conversation_type::from(Cursor::new(vec).$read_func().unwrap());
+        assert_eq!(*num, num1);
+    }
 }
+    };
+}
+
+beat_match!(var_int_beat_matching, VarInt, i32, write_var_int, read_var_int);
+beat_match!(var_long_beat_matching, VarLong, i64, write_var_long, read_var_long);

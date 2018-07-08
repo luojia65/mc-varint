@@ -1,8 +1,8 @@
 use std::io;
 
 macro_rules! var_impl {
-    ($store_struct: ident, $read_trait: ident, $write_trait: ident, $conversation_type: ident,
-    $size: expr, $error_too_long: expr) => {
+    ($store_struct: ident, $read_trait: ident, $write_trait: ident, $read_func: ident, $write_func: ident,
+    $conversation_type: ident, $size: expr, $error_too_long: expr) => {
 
 // All $store_struct's should be checked, which means their `inner`'s are safe to write directly for
 // readers to read.
@@ -20,11 +20,11 @@ impl Default for $store_struct {
 }
 
 pub trait $read_trait {
-    fn read_var_int(&mut self) -> io::Result<$store_struct>;
+    fn $read_func(&mut self) -> io::Result<$store_struct>;
 }
 
 impl<R> $read_trait for R where R: io::Read {
-    fn read_var_int(&mut self) -> Result<$store_struct, io::Error> {
+    fn $read_func(&mut self) -> Result<$store_struct, io::Error> {
         let mut ans = $store_struct {
             inner: [0u8; $size]
         };
@@ -45,11 +45,11 @@ impl<R> $read_trait for R where R: io::Read {
 }
 
 pub trait $write_trait {
-    fn write_var_int(&mut self, n: $store_struct) -> io::Result<()>;
+    fn $write_func(&mut self, n: $store_struct) -> io::Result<()>;
 }
 
 impl<W> $write_trait for W where W: io::Write {
-    fn write_var_int(&mut self, n: $store_struct) -> io::Result<()> {
+    fn $write_func(&mut self, n: $store_struct) -> io::Result<()> {
         let mut buf = [0x00];
         let mut ptr = 0;
         loop {
@@ -113,6 +113,8 @@ impl From<$conversation_type> for $store_struct {
     };
 }
 
-var_impl!(VarInt, VarIntRead, VarIntWrite, i32, 5, "varint too long (length > 5)");
-var_impl!(VarLong, VarLongRead, VarLongWrite, i64, 10, "varlong too long (length > 10)");
+var_impl!(VarInt, VarIntRead, VarIntWrite, read_var_int, write_var_int,
+            i32, 5, "varint too long (length > 5)");
+var_impl!(VarLong, VarLongRead, VarLongWrite, read_var_long, write_var_long,
+            i64, 10, "varlong too long (length > 10)");
 
