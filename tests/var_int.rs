@@ -4,17 +4,25 @@ use mc_varint::{VarInt, VarIntRead, VarIntWrite, VarLong, VarLongRead, VarLongWr
 use std::io::{Cursor, ErrorKind};
 use std::collections::HashSet;
 
+macro_rules! size_test {
+    ($func_name: ident, $var_type: ident, $size: expr) => {
+#[test]
+fn $func_name() {
+    use std::mem::size_of;
+    assert_eq!($size, size_of::<$var_type>());
+}
+    };
+}
+
+size_test!(var_int_size, VarInt, 5);
+size_test!(var_long_size, VarLong, 10);
+
 #[test]
 fn var_int_default() {
     let d: VarInt = Default::default();
     assert_eq!(d, Cursor::new(vec![0x00]).read_var_int().unwrap());
 }
 
-#[test]
-fn var_int_size() {
-    use std::mem::size_of;
-    assert_eq!(5, size_of::<VarInt>());
-}
 
 #[test]
 fn var_int_read_exact() {
