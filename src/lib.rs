@@ -1,11 +1,57 @@
+//! An implementation for Minecraft[^mc]'s VarInt and VarLong types, focusing on minimum memory
+//! usage and maximum performance.
+//!
+//! [^mc]: A well-known video game whose servers and clients are able to be built by third-party authors.
+//!
+//! This crate contains two structs for VarInt and VarLong, and four traits for conversations and
+//! IO operations on them. You may refer to the paragraphs following to get their usages.
+//!
+//! Algorithms and structures herein are built according to [wiki.vg]
+//!
+//! [wiki.vg]: http://wiki.vg/
+//!
+//! # VarInt and VarLong struct
+//!
+//! These two structs represents the two types mentioned above. Data stored in these two structs
+//! are guaranteed a valid VarInt or VarLong by their conversation traits.
+//!
+//! You may create these structs using function `VarInt::from(i32)` and `VarLong::from(i64)`.
+//! And using `i32::from(VarInt)` and `i64::from(VarLong)` can simply convert two structs into
+//! actual values in order to use them in following logic.
+//!
+//! These two structs implements `Default`, which leads to easier use in codes.
+//!
+//! # Two 'Read' traits and two 'Write' traits
+//!
+//! They are VarIntRead, VarLongRead for 'Read', and VarIntWrite, VarLongWrite for 'Write'.
+//!
+//! Both two 'Read' traits are implemented for all `R`'s where `R: io::Read`. You may use it to
+//! read `VarInt`'s and `VarLong`'s directly from IO streams, such as, network connections or files.
+//!
+//! And for the two 'Write' traits, they are implemented for all `W`'s where `W: io::Write` for your
+//! convenience.
+//!
+//! # How this crate reduces memory usage
+//!
+//! As only VarInt and VarLong struct performs the allocation, firstly we should minimize the space
+//! these two structs use in memory. As These two structs only stores the sized integer data
+//! instead of something combined with pointers and sizes, the memory usage is reduced to minimal,
+//! which means, the VarInt only uses 5 bytes and VarLong only uses 10.
+//!
+//! When writing to IO, reading from IO or performing type conversations, this crate only allocate
+//! one `[u8; 1]` array as buffer, and for the Rust's sake, can free it safely even without a GC.
+//! By this way we save more memory in calculating, resulting in more memory able to be used for
+//! network buffers, databases and your following logic code.
+
+#![deny(missing_docs)]
+
 use std::io;
 
 macro_rules! var_impl {
     ($store_struct: ident, $read_trait: ident, $write_trait: ident, $read_func: ident, $write_func: ident,
     $conversation_type: ident, $size: expr, $error_too_long: expr) => {
 
-// All $store_struct's should be checked, which means their `inner`'s are safe to write directly for
-// readers to read.
+/// The struct representing a VarInt or VarLong.
 #[derive(Debug, Eq, PartialEq)]
 pub struct $store_struct {
     inner: [u8; $size]
@@ -19,7 +65,38 @@ impl Default for $store_struct {
     }
 }
 
+/// The Read trait for this VarInt or VarLong struct.
+///
+/// This trait is implemented for all `io::Read`'s.
+///
+/// # Examples
+///
+/// `Cursor`s implement `io::Read`, thus implement `VarIntRead` and `VarLongRead`:
+///
+/// ```
+/// extern crate mc_varint;
+///
+/// use mc_varint::{VarInt, VarIntRead};
+/// use std::io::Cursor;
+///
+/// fn main() {
+///     // firstly we create a Cursor
+///     let mut cur = Cursor::new(vec![0xff, 0xff, 0xff, 0xff, 0x07]);
+///     // secondly we read from it
+///     let var_int = cur.read_var_int().unwrap();
+///     // the value of var_int is 2147483647
+///     assert_eq!(var_int, VarInt::from(2147483647));
+/// }
+/// ```
 pub trait $read_trait {
+    /// Reads a VarInt or Varlong from `self`.
+    ///
+    /// The current position is advanced according to the length of VarInt or VarLong.
+    ///
+    /// # Errors
+    ///
+    /// If the VarInt or VarLong to read from `self` is too long (is invalid) or this function
+    /// encounters any form of underlying I/O or other error, an error variant will be returned.
     fn $read_func(&mut self) -> io::Result<$store_struct>;
 }
 
@@ -44,7 +121,39 @@ impl<R> $read_trait for R where R: io::Read {
     }
 }
 
+/// The Write trait for this VarInt or VarLong struct.
+///
+/// This trait is implemented for all `io::Write`'s.
+///
+/// # Examples
+///
+/// `Cursor`s implement `io::Write`, thus implement `VarIntWrite` and `VarLongWrite`:
+///
+/// ```
+/// extern crate mc_varint;
+///
+/// use mc_varint::{VarInt, VarIntWrite};
+/// use std::io::Cursor;
+///
+/// fn main() {
+///     // firstly we create a Cursor and a VarInt
+///     let mut cur = Cursor::new(Vec::with_capacity(5));
+///     let var_int = VarInt::from(2147483647);
+///     // secondly we write to it
+///     cur.write_var_int(var_int).unwrap();
+///     // now the var_int is written to cur.
+///     assert_eq!(cur.into_inner(), vec![0xff, 0xff, 0xff, 0xff, 0x07]);
+/// }
+/// ```
 pub trait $write_trait {
+    /// Writes a VarInt or Varlong to `self`.
+    ///
+    /// The current position is advanced according to the length of VarInt or VarLong.
+    ///
+    /// # Errors
+    ///
+    /// If this function encounters any form of underlying I/O or other error, an error variant
+    /// will be returned.
     fn $write_func(&mut self, n: $store_struct) -> io::Result<()>;
 }
 
