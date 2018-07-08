@@ -1,5 +1,5 @@
 # mc-varint
-VarInt and VarLong implemetation in Rust, providing minimum memory usage and maximum performance.
+Minecraft VarInt and VarLong implemetation in Rust, providing minimum memory usage and maximum performance.
 
 [![Crates.io][crates-badge]][crates-url]
 [![WTFPL licensed][pl-badge]][pl-url]
