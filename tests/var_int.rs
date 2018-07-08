@@ -2,6 +2,7 @@ extern crate mc_varint;
 
 use mc_varint::{VarInt, VarIntRead, VarIntWrite};
 use std::io::{Cursor, ErrorKind};
+use std::collections::HashSet;
 
 #[test]
 fn var_int_default() {
@@ -14,6 +15,7 @@ fn var_int_size() {
     use std::mem::size_of;
     assert_eq!(5, size_of::<VarInt>());
 }
+
 #[test]
 fn var_int_read_exact() {
     let cond = [
@@ -80,12 +82,7 @@ fn var_int_write_exact() {
 
 #[test]
 fn beat_matching() {
-    let cond = [
-        -2147483648, -123456789, -12345678, -1234567, -123456, -12345, -1234, -123, -12, -1,
-        0, 1, 12, 123, 1234, 12345, 123456, 1234567, 12345678, 123456789, 2147483647,
-        127, 128, 129, -127, -128, -129, -256, -255, -254, 254, 255, 256,
-        16383, 16384, 16385, -16383, -16384, -16385, 32767, 32768, 32769, -32767, -32768, -32769
-    ];
+    let cond = bm_cond_generate();
     for num in cond.iter() {
         let mut cur = Cursor::new(Vec::new());
         let var_int = VarInt::from(*num);
@@ -95,4 +92,26 @@ fn beat_matching() {
         let num1 = i32::from(Cursor::new(vec).read_var_int().unwrap());
         assert_eq!(*num, num1);
     }
+}
+
+fn bm_cond_generate() -> HashSet<i32> {
+    let mut ans = HashSet::new();
+    let mut i = 1;
+    loop {
+        ans.insert(i - 1);
+        ans.insert(i);
+        ans.insert(i + 1);
+        ans.insert(- i - 1);
+        ans.insert(- i);
+        ans.insert(- i + 1);
+        if i <= i32::max_value() / 2 {
+            i *= 2;
+        } else {
+            break;
+        }
+    }
+    ans.insert(0);
+    ans.insert(i32::max_value());
+    ans.insert(i32::min_value());
+    ans
 }
