@@ -6,9 +6,9 @@
 //! This crate contains two structs for VarInt and VarLong, and four traits for conversations and
 //! IO operations on them. You may refer to the paragraphs following to get their usages.
 //!
-//! Algorithms and structures herein are built according to [wiki.vg]
+//! Algorithms and structures herein are built according to [a wiki.vg page]
 //!
-//! [wiki.vg]: http://wiki.vg/
+//! [a wiki.vg page]: http://wiki.vg/Protocol#VarInt_and_VarLong
 //!
 //! # VarInt and VarLong struct
 //!
