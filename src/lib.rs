@@ -82,7 +82,7 @@ impl Default for $store_struct {
 /// fn main() {
 ///     // firstly we create a Cursor
 ///     let mut cur = Cursor::new(vec![0xff, 0xff, 0xff, 0xff, 0x07]);
-///     // secondly we read from it
+///     // secondly we write the VarInt to the Cursor
 ///     let var_int = cur.read_var_int().unwrap();
 ///     // the value of var_int is 2147483647
 ///     assert_eq!(var_int, VarInt::from(2147483647));
@@ -166,7 +166,7 @@ impl<W> $write_trait for W where W: io::Write {
                 break;
             }
             buf[0] = n.inner[ptr];
-            self.write(&buf)?;
+            self.write_all(&buf)?;
             ptr += 1;
             if ptr >= $size {
                 break;
@@ -175,7 +175,7 @@ impl<W> $write_trait for W where W: io::Write {
         // If no bytes written, that is, the $store_struct is equal to 0
         if ptr == 0 {
             // At that time, `buf` is still [0x00], let's write it
-            self.write(&buf)?;
+            self.write_all(&buf)?;
         }
         Ok(())
     }
@@ -186,7 +186,7 @@ impl From<$store_struct> for $conversation_type {
         let mut ans = 0 as Self;
         let mut ptr = 0;
         loop {
-            let value = (v.inner[ptr] & 0b0111_1111) as Self;
+            let value = $conversation_type::from(v.inner[ptr] & 0b0111_1111);
             ans |= value << (7 * ptr as Self);
             if v.inner[ptr] & 0b1000_0000 == 0 {
                 return ans;

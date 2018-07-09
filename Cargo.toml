@@ -1,8 +1,8 @@
 [package]
 name = "mc-varint"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["luojia65 <me@luojia.cc>"]
-description = "VarInt and VarLong implemetation in Rust, providing minimum memory usage and maximum performance."
+description = "Minecraft's VarInt and VarLong implemetation in Rust, providing minimum memory usage and maximum performance."
 license = "WTFPL"
 readme = "README.md"
 repository = "https://github.com/luojia65/mc-varint"
