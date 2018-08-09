@@ -48,10 +48,13 @@
 use std::io;
 
 macro_rules! var_impl {
-    ($store_struct: ident, $read_trait: ident, $write_trait: ident, $read_func: ident, $write_func: ident,
+    ($store_struct: ident, $display_name: expr, $read_trait: ident, $write_trait: ident, 
+    $read_func: ident, $write_func: ident,
     $conversation_type: ident, $size: expr, $error_too_long: expr) => {
 
-/// The struct representing a VarInt or VarLong.
+#[doc = "The struct representing a"]
+#[doc = $display_name]
+#[doc = "value."]
 #[derive(Debug, Eq, PartialEq)]
 pub struct $store_struct {
     inner: [u8; $size]
@@ -65,38 +68,48 @@ impl Default for $store_struct {
     }
 }
 
-/// The Read trait for this VarInt or VarLong struct.
-///
-/// This trait is implemented for all `io::Read`'s.
-///
-/// # Examples
-///
-/// `Cursor`s implement `io::Read`, thus implement `VarIntRead` and `VarLongRead`:
-///
-/// ```
-/// extern crate mc_varint;
-///
-/// use mc_varint::{VarInt, VarIntRead};
-/// use std::io::Cursor;
-///
-/// fn main() {
-///     // firstly we create a Cursor
-///     let mut cur = Cursor::new(vec![0xff, 0xff, 0xff, 0xff, 0x07]);
-///     // secondly we write the VarInt to the Cursor
-///     let var_int = cur.read_var_int().unwrap();
-///     // the value of var_int is 2147483647
-///     assert_eq!(var_int, VarInt::from(2147483647));
-/// }
-/// ```
+#[doc = "The Read trait for"]
+#[doc = $display_name]
+#[doc = "struct.
+
+This trait is implemented for all `io::Read`'s.
+
+# Examples
+
+`Cursor`s implement `io::Read`, thus implement `VarIntRead` and `VarLongRead`:
+
+```
+extern crate mc_varint;
+
+use mc_varint::{VarInt, VarIntRead};
+use std::io::Cursor;
+
+fn main() {
+    // firstly we create a Cursor
+    let mut cur = Cursor::new(vec![0xff, 0xff, 0xff, 0xff, 0x07]);
+    // secondly we write the VarInt to the Cursor
+    let var_int = cur.read_var_int().unwrap();
+    // the value of var_int is 2147483647
+    assert_eq!(var_int, VarInt::from(2147483647));
+}
+```
+"]
 pub trait $read_trait {
-    /// Reads a VarInt or Varlong from `self`.
-    ///
-    /// The current position is advanced according to the length of VarInt or VarLong.
-    ///
-    /// # Errors
-    ///
-    /// If the VarInt or VarLong to read from `self` is too long (is invalid) or this function
-    /// encounters any form of underlying I/O or other error, an error variant will be returned.
+    #[doc = "Reads a"]
+    #[doc = $display_name]
+    #[doc = "from `self`.
+
+The current position is advanced according to the length of"]
+    #[doc = $display_name]
+    #[doc = ".
+
+# Errors
+
+If the"]
+    #[doc = $display_name]
+    #[doc = "to read from `self` is too long (is invalid) or this function
+encounters any form of underlying I/O or other error, an error will be returned.
+    "]
     fn $read_func(&mut self) -> io::Result<$store_struct>;
 }
 
@@ -121,39 +134,45 @@ impl<R> $read_trait for R where R: io::Read {
     }
 }
 
-/// The Write trait for this VarInt or VarLong struct.
-///
-/// This trait is implemented for all `io::Write`'s.
-///
-/// # Examples
-///
-/// `Cursor`s implement `io::Write`, thus implement `VarIntWrite` and `VarLongWrite`:
-///
-/// ```
-/// extern crate mc_varint;
-///
-/// use mc_varint::{VarInt, VarIntWrite};
-/// use std::io::Cursor;
-///
-/// fn main() {
-///     // firstly we create a Cursor and a VarInt
-///     let mut cur = Cursor::new(Vec::with_capacity(5));
-///     let var_int = VarInt::from(2147483647);
-///     // secondly we write to it
-///     cur.write_var_int(var_int).unwrap();
-///     // now the var_int is written to cur.
-///     assert_eq!(cur.into_inner(), vec![0xff, 0xff, 0xff, 0xff, 0x07]);
-/// }
-/// ```
+#[doc = "The Write trait for"]
+#[doc = $display_name]
+#[doc = "struct.
+
+This trait is implemented for all `io::Write`'s.
+
+# Examples
+
+`Cursor`s implement `io::Write`, thus implement `VarIntWrite` and `VarLongWrite`:
+
+```
+extern crate mc_varint;
+
+use mc_varint::{VarInt, VarIntWrite};
+use std::io::Cursor;
+
+fn main() {
+    // firstly we create a Cursor and a VarInt
+    let mut cur = Cursor::new(Vec::with_capacity(5));
+    let var_int = VarInt::from(2147483647);
+    // secondly we write to it
+    cur.write_var_int(var_int).unwrap();
+    // now the var_int is written to cur.
+    assert_eq!(cur.into_inner(), vec![0xff, 0xff, 0xff, 0xff, 0x07]);
+}
+```"]
 pub trait $write_trait {
-    /// Writes a VarInt or Varlong to `self`.
-    ///
-    /// The current position is advanced according to the length of VarInt or VarLong.
-    ///
-    /// # Errors
-    ///
-    /// If this function encounters any form of underlying I/O or other error, an error variant
-    /// will be returned.
+    #[doc = "Writes a"]
+    #[doc = $display_name]
+    #[doc = "to `self`.
+
+The current position is advanced according to the length of"]
+    #[doc = $display_name]
+    #[doc = "struct.
+
+# Errors
+
+If this function encounters any form of underlying I/O or other error, an error variant
+will be returned."]
     fn $write_func(&mut self, n: $store_struct) -> io::Result<()>;
 }
 
@@ -222,8 +241,8 @@ impl From<$conversation_type> for $store_struct {
     };
 }
 
-var_impl!(VarInt, VarIntRead, VarIntWrite, read_var_int, write_var_int,
+var_impl!(VarInt, "VarInt", VarIntRead, VarIntWrite, read_var_int, write_var_int,
             i32, 5, "varint too long (length > 5)");
-var_impl!(VarLong, VarLongRead, VarLongWrite, read_var_long, write_var_long,
+var_impl!(VarLong, "VarLong", VarLongRead, VarLongWrite, read_var_long, write_var_long,
             i64, 10, "varlong too long (length > 10)");
 
