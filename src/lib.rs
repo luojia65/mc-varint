@@ -3,17 +3,17 @@
 //!
 //! [^mc]: A well-known video game whose servers and clients are able to be built by third-party authors.
 //!
-//! This crate contains two structs for VarInt and VarLong, and four traits for conversations and
+//! This crate contains [`VarInt`], [`VarLong`], and four traits for conversations and
 //! IO operations on them. You may refer to the paragraphs following to get their usages.
 //!
 //! Algorithms and structures herein are built according to [a wiki.vg page]
 //!
 //! [a wiki.vg page]: http://wiki.vg/Protocol#VarInt_and_VarLong
 //!
-//! # VarInt and VarLong struct
+//! # [`VarInt`] and [`VarLong`] struct
 //!
 //! These two structs represents the two types mentioned above. Data stored in these two structs
-//! are guaranteed a valid VarInt or VarLong by their conversation traits.
+//! are guaranteed a valid [`VarInt`] or [`VarLong`] by their conversation traits.
 //!
 //! You may create these structs using function `VarInt::from(i32)` and `VarLong::from(i64)`.
 //! And using `i32::from(VarInt)` and `i64::from(VarLong)` can simply convert two structs into
@@ -23,10 +23,10 @@
 //!
 //! # Two 'Read' traits and two 'Write' traits
 //!
-//! They are VarIntRead, VarLongRead for 'Read', and VarIntWrite, VarLongWrite for 'Write'.
+//! They are [`VarIntRead`], [`VarLongRead`] for 'Read', and [`VarIntWrite`], [`VarLongWrite`] for 'Write'.
 //!
 //! Both two 'Read' traits are implemented for all `R`'s where `R: io::Read`. You may use it to
-//! read `VarInt`'s and `VarLong`'s directly from IO streams, such as, network connections or files.
+//! read VarInt's and VarLong's directly from IO streams, such as, network connections or files.
 //!
 //! And for the two 'Write' traits, they are implemented for all `W`'s where `W: io::Write` for your
 //! convenience.
@@ -42,6 +42,13 @@
 //! one `[u8; 1]` array as buffer, and for the Rust's sake, can free it safely even without a GC.
 //! By this way we save more memory in calculating, resulting in more memory able to be used for
 //! network buffers, databases and your following logic code.
+//! 
+//! [`VarInt`]: struct.VarInt.html
+//! [`VarLong`]: struct.VarLong.html
+//! [`VarIntRead`]: trait.VarIntRead.html
+//! [`VarLongRead`]: trait.VarLongRead.html
+//! [`VarIntWrite`]: trait.VarIntWrite.html
+//! [`VarLongWrite`]: trait.VarLongWrite.html
 
 #![deny(missing_docs)]
 
